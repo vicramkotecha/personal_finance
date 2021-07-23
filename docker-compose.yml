@@ -9,7 +9,7 @@ services:
    
         # bind mount volume for Postgres data
         volumes:
-            - $PWD/pg-data/:/var/lib/postgresql/data
+            #- $PWD/pg-data/:/var/lib/postgresql/data
             - $PWD/python-app:/var/www/html
    
         # open port so host machine can access

@@ -9,13 +9,13 @@ RUN apt-get -y install postgresql-server-dev-10 gcc python3-dev musl-dev
 RUN pip3 install psycopg2
 
 # add the 'postgres' admin role
-USER postgres
 
 # expose Postgres port
 EXPOSE 5432
 
 # bind mount Postgres volumes for persistent data
 VOLUME ["/etc/postgresql", "/var/log/postgresql", "/var/lib/postgresql"]
-RUN chown -R postgres:postgres /etc/postgresql
-RUN chown -R postgres:postgres /var/log/postgresql
-RUN chown -R postgres:postgres /var/lib/postgresql
+USER postgres
+#RUN chown -R postgres:postgres /etc/postgresql
+#RUN chown -R postgres:postgres /var/log/postgresql
+#RUN chown -R postgres:postgres /var/lib/postgresql
