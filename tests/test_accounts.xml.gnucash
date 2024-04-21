@@ -37,6 +37,10 @@
     <slot:key>features</slot:key>
     <slot:value type="frame">
       <slot>
+        <slot:key>Register sort and filter settings stored in .gcm file</slot:key>
+        <slot:value type="string">Store the register sort and filter settings in .gcm metadata file (requires at least GnuCash 3.3)</slot:value>
+      </slot>
+      <slot>
         <slot:key>Use a dedicated opening balance account identified by an 'equity-type' slot</slot:key>
         <slot:value type="string">Use a dedicated opening balance account identified by an 'equity-type' slot (requires at least Gnucash 4.3)</slot:value>
       </slot>
@@ -80,6 +84,7 @@
 </book:slots>
 <gnc:count-data cd:type="commodity">1</gnc:count-data>
 <gnc:count-data cd:type="account">64</gnc:count-data>
+<gnc:count-data cd:type="transaction">2</gnc:count-data>
 <gnc:commodity version="2.0.0">
   <cmdty:space>CURRENCY</cmdty:space>
   <cmdty:id>USD</cmdty:id>
@@ -944,6 +949,82 @@
   </act:slots>
   <act:parent type="guid">e3b78ab0d3e440c8b47f50281ddf6e24</act:parent>
 </gnc:account>
+<gnc:transaction version="2.0.0">
+  <trn:id type="guid">f52655dad6e54952a147355c30b089dc</trn:id>
+  <trn:currency>
+    <cmdty:space>CURRENCY</cmdty:space>
+    <cmdty:id>USD</cmdty:id>
+  </trn:currency>
+  <trn:date-posted>
+    <ts:date>2024-03-15 10:59:00 +0000</ts:date>
+  </trn:date-posted>
+  <trn:date-entered>
+    <ts:date>2024-03-15 09:18:31 +0000</ts:date>
+  </trn:date-entered>
+  <trn:description>Salary test</trn:description>
+  <trn:slots>
+    <slot>
+      <slot:key>date-posted</slot:key>
+      <slot:value type="gdate">
+        <gdate>2024-03-15</gdate>
+      </slot:value>
+    </slot>
+  </trn:slots>
+  <trn:splits>
+    <trn:split>
+      <split:id type="guid">c8953d0e82d34f9dbc3344c29b7ce413</split:id>
+      <split:reconciled-state>n</split:reconciled-state>
+      <split:value>10000/100</split:value>
+      <split:quantity>10000/100</split:quantity>
+      <split:account type="guid">344e27c04c904a4aacf7c3ffe18ac2a2</split:account>
+    </trn:split>
+    <trn:split>
+      <split:id type="guid">ed6d62866a3d49a4a89e00a5a24f16a9</split:id>
+      <split:reconciled-state>n</split:reconciled-state>
+      <split:value>-10000/100</split:value>
+      <split:quantity>-10000/100</split:quantity>
+      <split:account type="guid">04fc19f203ff4a599ae113e96b7a54ff</split:account>
+    </trn:split>
+  </trn:splits>
+</gnc:transaction>
+<gnc:transaction version="2.0.0">
+  <trn:id type="guid">c244e239dca24b30a4424963aabbfecb</trn:id>
+  <trn:currency>
+    <cmdty:space>CURRENCY</cmdty:space>
+    <cmdty:id>USD</cmdty:id>
+  </trn:currency>
+  <trn:date-posted>
+    <ts:date>2024-03-15 10:59:00 +0000</ts:date>
+  </trn:date-posted>
+  <trn:date-entered>
+    <ts:date>2024-03-15 09:18:52 +0000</ts:date>
+  </trn:date-entered>
+  <trn:description>Expense test</trn:description>
+  <trn:slots>
+    <slot>
+      <slot:key>date-posted</slot:key>
+      <slot:value type="gdate">
+        <gdate>2024-03-15</gdate>
+      </slot:value>
+    </slot>
+  </trn:slots>
+  <trn:splits>
+    <trn:split>
+      <split:id type="guid">2018ca1d278c41988e00aafa75ebf386</split:id>
+      <split:reconciled-state>n</split:reconciled-state>
+      <split:value>10000/100</split:value>
+      <split:quantity>10000/100</split:quantity>
+      <split:account type="guid">4ae664c1f9e94e92948b0c4f427f71cb</split:account>
+    </trn:split>
+    <trn:split>
+      <split:id type="guid">b5bffb645d1f4a80a1ac7e65bd06e836</split:id>
+      <split:reconciled-state>n</split:reconciled-state>
+      <split:value>-10000/100</split:value>
+      <split:quantity>-10000/100</split:quantity>
+      <split:account type="guid">344e27c04c904a4aacf7c3ffe18ac2a2</split:account>
+    </trn:split>
+  </trn:splits>
+</gnc:transaction>
 </gnc:book>
 </gnc-v2>
 
