@@ -53,5 +53,5 @@ if __name__ == '__main__':
     home_dir = os.path.expanduser('~')
     gnucash_xml_file = os.path.join(home_dir, 'gnucash', 'accounts.gnucash')
     report_path = os.path.join(home_dir, 'gnucash', 'reports', 'combined_report.pdf')
-    csv_path = os.path.join(home_dir, 'gnucash', 'reports', 'combined_report.csv')
+    csv_path = os.path.join(home_dir, 'gnucash', 'reports', 'balance_sheet.csv')
     run_combined_report(gnucash_xml_file, report_path, csv_path)
