@@ -1,2 +1,2 @@
-Account,Balance,Currency,Currency Price in USD,Price Date
-Assets:Current Assets:Checking Account,0,USD,0,None
+Account,Balance Date,EUR Balance,Account Currency Balance,Currency,Currency Price in USD,Price Date
+Assets:Current Assets:Checking Account,Year End,0,0,USD,0,None
