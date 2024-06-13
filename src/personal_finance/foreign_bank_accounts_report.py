@@ -13,7 +13,7 @@ currency_url_map = {
 
 def get_exchange_rate(url, currency, date):
     data = requests.get(url.format(date=datetime.date.strftime(date, '%Y-%m-%d'))).json()
-    return float(data['data'][0]['exchange_rate'])
+    return 1 / float(data['data'][0]['exchange_rate'])
 
 class ForeignBankAccountsReport(object):
 
