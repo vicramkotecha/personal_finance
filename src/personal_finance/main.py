@@ -25,21 +25,13 @@ def run_pie_chart_report(gnucash_xml_file, report_path):
     
     run_report(gnucash_xml_file, generators, report_path)
 
-def run_fbar_report(gnucash_xml_file, report_path, csv_path):
-    
-        generators = [
-            UsFbarReport(balances_csv_path=csv_path)
-        ]
-    
-        run_report(gnucash_xml_file, generators, report_path)
+def run_fbar_report(gnucash_xml_file, csv_path):
 
-def run_modelo_720_report(gnucash_xml_file, report_path, csv_path):
+    UsFbarReport(balances_csv_path=csv_path).add_report(gnucash_xml_file, None)
 
-    generators = [
-        Model720Report(balances_csv_path=csv_path)
-    ]
+def run_modelo_720_report(gnucash_xml_file, csv_path):
 
-    run_report(gnucash_xml_file, generators, report_path)
+    Model720Report(balances_csv_path=csv_path).add_report(gnucash_xml_file, None)
 
 def run_balance_history_report(gnucash_xml_file, report_path):
 
