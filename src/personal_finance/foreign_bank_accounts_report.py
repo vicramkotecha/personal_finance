@@ -44,7 +44,11 @@ class ForeignBankAccountsReport(object):
         account_currencies = get_account_currencies(book)
         if self.balances_csv_path:
             with open(self.balances_csv_path, 'w') as f:
-                f.write(f'Account,Balance Date,{self.base_currency} Balance,Account Currency Balance,Currency,Currency Price in USD,Price Date\n')
+                if self.use_max_balance:
+                    balance_type  = 'Max'
+                else:
+                    balance_type = 'Yearend'
+                f.write(f'Account,Balance Date,Average {self.base_currency} Balance,{balance_type} {self.base_currency} Balance,Account Currency Balance,Currency,Currency Price in USD,Price Date\n')
                 for account, balances_by_date in sorted(account_balances.items()):
                     if account.startswith('Assets:') and account_currencies[account] != self.base_currency: # only require foreign accounts
                         balance_year_end = balances_by_date.get(self.end_date, 0)
@@ -72,20 +76,19 @@ class ForeignBankAccountsReport(object):
                         
                         if self.use_max_balance:
                             balance_to_count = balance_max
-                        elif balance_average > balance_year_end:
-                            balance_to_count = balance_average
-                            balance_date = "Average"
                         else:
                             balance_to_count = balance_year_end
-                            balance_date = "Year End"
-
+                            balance_date = self.end_date
+ 
                         if self.use_yearend_rate and account_currencies[account] in self.exchange_rates:
                             price = self.exchange_rates[account_currencies[account]]
                             price_date = self.end_date
                         else:
                             price, price_date = get_latest_price_before_or_on_date(book, account_currencies[account], self.end_date)
 
-                        balance_in_base_currency = balance_to_count * Decimal(price)
+                        counted_balance_in_base_currency = balance_to_count * Decimal(price)
 
-                        f.write(f'{account},{balance_date},{balance_in_base_currency},{balance_to_count},{account_currencies[account]},{price},{price_date}\n')
+                        average_balance_in_base_currency = balance_average * Decimal(price)
+
+                        f.write(f'{account},{balance_date},{average_balance_in_base_currency},{counted_balance_in_base_currency},{balance_to_count},{account_currencies[account]},{price},{price_date}\n')
 
