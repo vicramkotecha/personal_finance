@@ -5,8 +5,8 @@ param(
 $GNUCASH_HOME = $env:GNUCASH_HOME
 $GNUCASH_EXE = Join-Path $GNUCASH_HOME 'gnucash.exe'
 
-# Launch GnuCash with the specified file
-Start-Process -FilePath $GNUCASH_EXE -ArgumentList $GnuCashFile
+# Launch GnuCash with the specified file (quote path for spaces)
+Start-Process -FilePath $GNUCASH_EXE -ArgumentList "`"$GnuCashFile`""
 
 # Wait for the fully-loaded main window (title contains " - " e.g. "Unsaved Book - GnuCash")
 # The splash screen title won't have that pattern
