@@ -1,8 +1,11 @@
 import os
 import unittest
+from unittest.mock import patch, MagicMock
 
 from personal_finance.category_mapper import DefaultCategoryMapper
-from personal_finance.statement_importer import load_profile, parse_statement, normalize_transactions
+from personal_finance.statement_importer import (
+    load_profile, parse_statement, normalize_transactions, import_statement,
+)
 
 
 SAMPLE_PROFILE_PATH = os.path.join('config', 'import_profiles', 'sample_bank.json')
@@ -73,6 +76,44 @@ class TestNormalizeTransactions(unittest.TestCase):
         self.assertEqual(txn['date'], '1/1/24')
         # Transfer from mapper
         self.assertEqual(txn['transfer'], 'Imbalance-USD')
+
+
+class TestImportStatement(unittest.TestCase):
+
+    @patch('personal_finance.statement_importer.close_gnucash')
+    @patch('personal_finance.statement_importer.enter_transaction')
+    @patch('personal_finance.statement_importer.open_account_register')
+    @patch('personal_finance.statement_importer.launch_gnucash')
+    def test_import_statement_enters_each_transaction(
+        self, mock_launch, mock_open, mock_enter, mock_close,
+    ):
+        ok = MagicMock()
+        ok.returncode = 0
+        mock_launch.return_value = (ok, 1234)
+        mock_open.return_value = ok
+        mock_enter.return_value = ok
+        mock_close.return_value = ok
+
+        import_statement(
+            profile_path=SAMPLE_PROFILE_PATH,
+            gnucash_file='test_data/test_accounts.xml.gnucash',
+            statement_file=TEST_CSV_PATH,
+            account_name='Checking Account',
+            default_transfer='Imbalance-USD',
+        )
+
+        mock_launch.assert_called_once_with('test_data/test_accounts.xml.gnucash')
+        mock_open.assert_called_once_with(1234, 'Checking Account')
+        # 1 row in test CSV → 1 enter_transaction call
+        mock_enter.assert_called_once_with(
+            pid=1234,
+            date='1/1/24',
+            description='Salary Payment',
+            transfer='Imbalance-USD',
+            deposit='5000.00',
+            withdrawal='',
+        )
+        mock_close.assert_called_once_with(1234)
 
 
 if __name__ == '__main__':

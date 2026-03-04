@@ -3,6 +3,14 @@ from datetime import datetime
 
 import pandas as pd
 
+from personal_finance.category_mapper import DefaultCategoryMapper
+from personal_finance.gnucash_interface import (
+    launch_gnucash,
+    close_gnucash,
+    open_account_register,
+    enter_transaction,
+)
+
 
 def load_profile(profile_path):
     with open(profile_path, 'r', encoding='utf-8') as f:
@@ -70,3 +78,58 @@ def normalize_transactions(df, profile, mapper):
         })
 
     return transactions
+
+
+def import_statement(profile_path, gnucash_file, statement_file, account_name,
+                     default_transfer='Imbalance-USD'):
+    profile = load_profile(profile_path)
+    df = parse_statement(statement_file, profile)
+    mapper = DefaultCategoryMapper(default_transfer, account_paths=[])
+    transactions = normalize_transactions(df, profile, mapper)
+
+    result, pid = launch_gnucash(gnucash_file)
+    if pid is None:
+        raise RuntimeError(f'Failed to launch GnuCash: {result.stderr}')
+
+    try:
+        result = open_account_register(pid, account_name)
+        if result.returncode != 0:
+            raise RuntimeError(f'Failed to open register: {result.stderr}')
+
+        for txn in transactions:
+            result = enter_transaction(
+                pid=pid,
+                date=txn['date'],
+                description=txn['description'],
+                transfer=txn['transfer'],
+                deposit=txn['deposit'],
+                withdrawal=txn['withdrawal'],
+            )
+            if result.returncode != 0:
+                raise RuntimeError(
+                    f'Failed to enter transaction: {txn["description"]}: {result.stderr}'
+                )
+    finally:
+        close_gnucash(pid)
+
+
+if __name__ == '__main__':
+    import argparse
+
+    parser = argparse.ArgumentParser(description='Import a bank statement into GnuCash')
+    parser.add_argument('profile', help='Path to the import profile JSON file')
+    parser.add_argument('gnucash_file', help='Path to the GnuCash file')
+    parser.add_argument('statement_file', help='Path to the bank statement file')
+    parser.add_argument('account', help='GnuCash account name to import into')
+    parser.add_argument('--default-transfer', default='Imbalance-USD',
+                        help='Default transfer account (default: Imbalance-USD)')
+
+    args = parser.parse_args()
+
+    import_statement(
+        profile_path=args.profile,
+        gnucash_file=args.gnucash_file,
+        statement_file=args.statement_file,
+        account_name=args.account,
+        default_transfer=args.default_transfer,
+    )
