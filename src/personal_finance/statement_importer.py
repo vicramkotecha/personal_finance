@@ -43,7 +43,7 @@ def parse_statement(file_path, profile):
     return df
 
 
-def normalize_transactions(df, profile):
+def normalize_transactions(df, profile, mapper):
     date_format = profile['date_format']
     transactions = []
 
@@ -59,9 +59,12 @@ def normalize_transactions(df, profile):
             deposit = ''
             withdrawal = f'{abs(amount):.2f}'
 
+        description = str(row['description'])
+
         transactions.append({
             'date': gnucash_date,
-            'description': str(row['description']),
+            'description': description,
+            'transfer': mapper.map(description),
             'deposit': deposit,
             'withdrawal': withdrawal,
         })

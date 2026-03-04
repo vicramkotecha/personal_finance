@@ -1,6 +1,7 @@
 import os
 import unittest
 
+from personal_finance.category_mapper import DefaultCategoryMapper
 from personal_finance.statement_importer import load_profile, parse_statement, normalize_transactions
 
 
@@ -51,8 +52,12 @@ class TestNormalizeTransactions(unittest.TestCase):
         self.profile = load_profile(SAMPLE_PROFILE_PATH)
         self.df = parse_statement(TEST_CSV_PATH, self.profile)
 
-    def test_normalize_returns_list_of_dicts_with_expected_keys(self):
-        transactions = normalize_transactions(self.df, self.profile)
+    def test_normalize_returns_transaction_dicts_with_transfer(self):
+        mapper = DefaultCategoryMapper(
+            default_transfer_account='Imbalance-USD',
+            account_paths=[],
+        )
+        transactions = normalize_transactions(self.df, self.profile, mapper)
 
         self.assertEqual(len(transactions), 1)
         txn = transactions[0]
@@ -60,11 +65,14 @@ class TestNormalizeTransactions(unittest.TestCase):
         self.assertIn('description', txn)
         self.assertIn('deposit', txn)
         self.assertIn('withdrawal', txn)
+        self.assertIn('transfer', txn)
         # Positive amount → deposit, empty withdrawal
         self.assertEqual(txn['deposit'], '5000.00')
         self.assertEqual(txn['withdrawal'], '')
         # Date reformatted from 2024-01-01 → 1/1/24 (GnuCash M/d/yy)
         self.assertEqual(txn['date'], '1/1/24')
+        # Transfer from mapper
+        self.assertEqual(txn['transfer'], 'Imbalance-USD')
 
 
 if __name__ == '__main__':
