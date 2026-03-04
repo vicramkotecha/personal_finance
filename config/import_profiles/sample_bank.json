@@ -1,0 +1,9 @@
+{
+    "file_format": "csv",
+    "column_mappings": {
+        "date": "Transaction date",
+        "description": "Description",
+        "amount": "Amount",
+        "balance": "Balance"
+    }
+}
