@@ -1,0 +1,11 @@
+{
+    "file_format": "xls",
+    "date_format": "%d/%m/%Y",
+    "header_rows_to_skip": 7,
+    "column_mappings": {
+        "date": "FECHA OPERACIÓN",
+        "description": "CONCEPTO",
+        "amount": "IMPORTE EUR",
+        "balance": "SALDO"
+    }
+}

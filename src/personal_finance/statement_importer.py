@@ -1,10 +1,11 @@
 import json
+from datetime import datetime
 
 import pandas as pd
 
 
 def load_profile(profile_path):
-    with open(profile_path, 'r') as f:
+    with open(profile_path, 'r', encoding='utf-8') as f:
         return json.load(f)
 
 
@@ -40,3 +41,29 @@ def parse_statement(file_path, profile):
     df = df[list(column_mappings.keys())]
 
     return df
+
+
+def normalize_transactions(df, profile):
+    date_format = profile['date_format']
+    transactions = []
+
+    for _, row in df.iterrows():
+        parsed_date = datetime.strptime(str(row['date']), date_format)
+        gnucash_date = f'{parsed_date.month}/{parsed_date.day}/{parsed_date.strftime("%y")}'
+
+        amount = float(row['amount'])
+        if amount >= 0:
+            deposit = f'{amount:.2f}'
+            withdrawal = ''
+        else:
+            deposit = ''
+            withdrawal = f'{abs(amount):.2f}'
+
+        transactions.append({
+            'date': gnucash_date,
+            'description': str(row['description']),
+            'deposit': deposit,
+            'withdrawal': withdrawal,
+        })
+
+    return transactions
