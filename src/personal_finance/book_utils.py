@@ -69,6 +69,15 @@ def get_account_full_path_name(account):
     return account
 
 
+def get_all_account_paths(book):
+    paths = []
+    for account, _subaccounts, _splits in book.walk():
+        path = get_account_full_path_name(account)
+        if path:
+            paths.append(path)
+    return paths
+
+
 def get_account_path(account):
     account_path = []
     while account:
