@@ -71,8 +71,8 @@ if ($gnucashProcess.MainWindowTitle -notlike "*$AccountName*") {
     exit 1
 }
 
-# Press Enter to go to the blank transaction row (matching existing pattern)
-[System.Windows.Forms.SendKeys]::SendWait("{ENTER}")
-Start-Sleep -Milliseconds 300
+# Jump to the blank transaction row at the bottom (Date field)
+[System.Windows.Forms.SendKeys]::SendWait("^{END}")
+Start-Sleep -Milliseconds 500
 
 exit 0

@@ -112,6 +112,7 @@ class TestImportStatement(unittest.TestCase):
             transfer='Imbalance-USD',
             deposit='5000.00',
             withdrawal='',
+            fx_rate='1',  # TODO: look up rate by date
         )
         mock_close.assert_called_once_with(1234)
 

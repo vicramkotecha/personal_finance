@@ -30,10 +30,10 @@ def close_gnucash(pid):
     return result
 
 
-def enter_transaction(pid, date, description, transfer, deposit, withdrawal):
+def enter_transaction(pid, date, description, transfer, deposit, withdrawal, fx_rate=''):
     result = _run_ps1(
         'enter_transaction.ps1',
-        str(pid), date, description, transfer, deposit, withdrawal,
+        str(pid), date, description, transfer, deposit, withdrawal, fx_rate,
     )
     return result
 

@@ -1,4 +1,6 @@
 import json
+import signal
+import time
 from datetime import datetime
 
 import pandas as pd
@@ -91,12 +93,27 @@ def import_statement(profile_path, gnucash_file, statement_file, account_name,
     if pid is None:
         raise RuntimeError(f'Failed to launch GnuCash: {result.stderr}')
 
+    interrupted = False
+
+    def _handle_sigint(sig, frame):
+        nonlocal interrupted
+        interrupted = True
+        print('\nCtrl-C received — finishing current transaction then closing GnuCash...')
+
+    original_handler = signal.getsignal(signal.SIGINT)
+    signal.signal(signal.SIGINT, _handle_sigint)
+
     try:
         result = open_account_register(pid, account_name)
         if result.returncode != 0:
             raise RuntimeError(f'Failed to open register: {result.stderr}')
 
-        for txn in transactions:
+        for i, txn in enumerate(transactions):
+            if interrupted:
+                print(f'Stopped after {i} of {len(transactions)} transactions.')
+                break
+
+            print(f'[{i+1}/{len(transactions)}] {txn["date"]} {txn["description"][:50]}')
             result = enter_transaction(
                 pid=pid,
                 date=txn['date'],
@@ -104,12 +121,18 @@ def import_statement(profile_path, gnucash_file, statement_file, account_name,
                 transfer=txn['transfer'],
                 deposit=txn['deposit'],
                 withdrawal=txn['withdrawal'],
+                fx_rate='1',  # TODO: look up rate by date
             )
             if result.returncode != 0:
                 raise RuntimeError(
                     f'Failed to enter transaction: {txn["description"]}: {result.stderr}'
                 )
+            time.sleep(1)
+        else:
+            print(f'All {len(transactions)} transactions entered.')
     finally:
+        signal.signal(signal.SIGINT, original_handler)
+        print('Saving and closing GnuCash...')
         close_gnucash(pid)
 
 
@@ -123,7 +146,6 @@ if __name__ == '__main__':
     parser.add_argument('account', help='GnuCash account name to import into')
     parser.add_argument('--default-transfer', default='Imbalance-USD',
                         help='Default transfer account (default: Imbalance-USD)')
-
     args = parser.parse_args()
 
     import_statement(
