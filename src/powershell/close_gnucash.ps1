@@ -20,10 +20,17 @@ if (-not $gnucashProcess) {
     exit 1
 }
 
-# Bring window to foreground and send Ctrl+Q for a clean quit
+# Bring window to foreground, save, then quit
 [Win32]::SetForegroundWindow($gnucashProcess.MainWindowHandle) | Out-Null
 Start-Sleep -Milliseconds 500
+
+# Save first (Ctrl+S)
+[System.Windows.Forms.SendKeys]::SendWait('^s')
+Start-Sleep -Milliseconds 1000
+
+# Quit (Ctrl+Q)
 [System.Windows.Forms.SendKeys]::SendWait('^q')
+Start-Sleep -Milliseconds 1000
 
 # Wait for GnuCash to exit
 $gnucashProcess.WaitForExit(15000) | Out-Null
