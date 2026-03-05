@@ -6,6 +6,7 @@ from datetime import datetime
 import pandas as pd
 
 from personal_finance.category_mapper import DefaultCategoryMapper
+from personal_finance.fx_rate_cache import FxRateCache
 from personal_finance.gnucash_interface import (
     launch_gnucash,
     close_gnucash,
@@ -73,6 +74,7 @@ def normalize_transactions(df, profile, mapper):
 
         transactions.append({
             'date': gnucash_date,
+            'iso_date': parsed_date.strftime('%Y-%m-%d'),
             'description': description,
             'transfer': mapper.map(description),
             'deposit': deposit,
@@ -88,6 +90,9 @@ def import_statement(profile_path, gnucash_file, statement_file, account_name,
     df = parse_statement(statement_file, profile)
     mapper = DefaultCategoryMapper(default_transfer, account_paths=[])
     transactions = normalize_transactions(df, profile, mapper)
+
+    fx_ticker = profile.get('fx_ticker')
+    fx_cache = FxRateCache(fx_ticker) if fx_ticker else None
 
     result, pid = launch_gnucash(gnucash_file)
     if pid is None:
@@ -114,6 +119,11 @@ def import_statement(profile_path, gnucash_file, statement_file, account_name,
                 break
 
             print(f'[{i+1}/{len(transactions)}] {txn["date"]} {txn["description"][:50]}')
+            if fx_cache:
+                fx_rate = fx_cache.get_rate(txn['iso_date'])
+            else:
+                fx_rate = '1'
+
             result = enter_transaction(
                 pid=pid,
                 date=txn['date'],
@@ -121,7 +131,7 @@ def import_statement(profile_path, gnucash_file, statement_file, account_name,
                 transfer=txn['transfer'],
                 deposit=txn['deposit'],
                 withdrawal=txn['withdrawal'],
-                fx_rate='1',  # TODO: look up rate by date
+                fx_rate=fx_rate,
             )
             if result.returncode != 0:
                 raise RuntimeError(

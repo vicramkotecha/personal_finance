@@ -21,6 +21,10 @@ class TestLoadProfile(unittest.TestCase):
         self.assertIsNotNone(profile)
         self.assertIn('file_format', profile)
 
+    def test_load_profile_with_fx_ticker(self):
+        profile = load_profile(SAMPLE_XLS_PROFILE_PATH)
+        self.assertEqual(profile['fx_ticker'], 'EURUSD=X')
+
 
 class TestParseStatement(unittest.TestCase):
 
@@ -115,6 +119,42 @@ class TestImportStatement(unittest.TestCase):
             fx_rate='1',  # TODO: look up rate by date
         )
         mock_close.assert_called_once_with(1234)
+
+    @patch('personal_finance.statement_importer.FxRateCache')
+    @patch('personal_finance.statement_importer.close_gnucash')
+    @patch('personal_finance.statement_importer.enter_transaction')
+    @patch('personal_finance.statement_importer.open_account_register')
+    @patch('personal_finance.statement_importer.launch_gnucash')
+    def test_import_statement_uses_fx_rate_from_cache_when_profile_has_ticker(
+        self, mock_launch, mock_open, mock_enter, mock_close, mock_fx_cache_cls,
+    ):
+        ok = MagicMock()
+        ok.returncode = 0
+        mock_launch.return_value = (ok, 1234)
+        mock_open.return_value = ok
+        mock_enter.return_value = ok
+        mock_close.return_value = ok
+
+        mock_cache = MagicMock()
+        mock_cache.get_rate.return_value = '1.0834'
+        mock_fx_cache_cls.return_value = mock_cache
+
+        import_statement(
+            profile_path=SAMPLE_XLS_PROFILE_PATH,
+            gnucash_file='test_data/test_accounts.xml.gnucash',
+            statement_file=TEST_XLS_PATH,
+            account_name='Checking Account',
+            default_transfer='Imbalance-USD',
+        )
+
+        # FxRateCache constructed with ticker from profile
+        mock_fx_cache_cls.assert_called_once_with('EURUSD=X')
+        # enter_transaction called with looked-up rate
+        mock_enter.assert_called_once()
+        call_kwargs = mock_enter.call_args
+        self.assertEqual(call_kwargs.kwargs['fx_rate'], '1.0834')
+        # get_rate called with the transaction date in YYYY-MM-DD format
+        mock_cache.get_rate.assert_called_once()
 
 
 if __name__ == '__main__':

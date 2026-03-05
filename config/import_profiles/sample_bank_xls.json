@@ -2,6 +2,7 @@
     "file_format": "xls",
     "date_format": "%d/%m/%Y",
     "header_rows_to_skip": 7,
+    "fx_ticker": "EURUSD=X",
     "column_mappings": {
         "date": "FECHA OPERACIÓN",
         "description": "CONCEPTO",

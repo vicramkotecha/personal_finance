@@ -13,9 +13,14 @@ Add-Type -AssemblyName System.Windows.Forms
 Add-Type @"
     using System;
     using System.Runtime.InteropServices;
+    using System.Text;
     public class Win32 {
         [DllImport("user32.dll")]
         public static extern bool SetForegroundWindow(IntPtr hWnd);
+        [DllImport("user32.dll")]
+        public static extern IntPtr GetForegroundWindow();
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        public static extern int GetWindowText(IntPtr hWnd, StringBuilder sb, int count);
     }
 "@
 
@@ -86,8 +91,16 @@ if ($Withdrawal -ne '') {
 Start-Sleep -Milliseconds 1000
 
 # Handle "Transfer Funds" currency dialog if it appears
-$gnucashProcess = Get-Process -Id $ProcessId -ErrorAction SilentlyContinue
-if ($gnucashProcess.MainWindowTitle -like '*Transfer Funds*') {
+# Check the foreground window title (modal dialogs have their own window)
+$fgWnd = [Win32]::GetForegroundWindow()
+$sb = New-Object System.Text.StringBuilder 256
+[Win32]::GetWindowText($fgWnd, $sb, 256) | Out-Null
+$fgTitle = $sb.ToString()
+
+if ($fgTitle -like '*Transfer Funds*') {
+    # TAB to the Exchange Rate field
+    [System.Windows.Forms.SendKeys]::SendWait("{TAB}")
+    [System.Windows.Forms.SendKeys]::SendWait("{TAB}")
     # Exchange Rate field should have focus — clear and type the rate
     [System.Windows.Forms.SendKeys]::SendWait("^a")
     Start-Sleep -Milliseconds $delay
