@@ -1,4 +1,6 @@
 import json
+import os
+import re
 import signal
 import time
 from datetime import datetime
@@ -70,7 +72,7 @@ def normalize_transactions(df, profile, mapper):
             deposit = ''
             withdrawal = f'{abs(amount):.2f}'
 
-        description = str(row['description'])
+        description = re.sub(r'\d{6,}', '', str(row['description']))
 
         transactions.append({
             'date': gnucash_date,
@@ -92,7 +94,13 @@ def import_statement(profile_path, gnucash_file, statement_file, account_name,
     transactions = normalize_transactions(df, profile, mapper)
 
     fx_ticker = profile.get('fx_ticker')
-    fx_cache = FxRateCache(fx_ticker) if fx_ticker else None
+    if fx_ticker:
+        cache_dir = os.path.join(os.path.dirname(os.path.abspath(profile_path)), '..', '..', 'data', 'cache')
+        os.makedirs(cache_dir, exist_ok=True)
+        cache_file = os.path.join(cache_dir, f'{fx_ticker}_cache.csv')
+        fx_cache = FxRateCache(fx_ticker, cache_file=cache_file)
+    else:
+        fx_cache = None
 
     result, pid = launch_gnucash(gnucash_file)
     if pid is None:
@@ -141,6 +149,8 @@ def import_statement(profile_path, gnucash_file, statement_file, account_name,
         else:
             print(f'All {len(transactions)} transactions entered.')
     finally:
+        if fx_cache:
+            fx_cache.save()
         signal.signal(signal.SIGINT, original_handler)
         print('Saving and closing GnuCash...')
         close_gnucash(pid)

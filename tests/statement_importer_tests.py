@@ -81,6 +81,20 @@ class TestNormalizeTransactions(unittest.TestCase):
         # Transfer from mapper
         self.assertEqual(txn['transfer'], 'Imbalance-USD')
 
+    def test_normalize_sanitizes_long_digit_sequences_from_description(self):
+        import pandas as pd
+        df = pd.DataFrame([{
+            'date': '2024-01-01',
+            'description': 'PAYMENT CARD 123456789012 STORE XYZ',
+            'amount': -50.00,
+        }])
+        mapper = DefaultCategoryMapper(
+            default_transfer_account='Imbalance-USD',
+            account_paths=[],
+        )
+        transactions = normalize_transactions(df, self.profile, mapper)
+        self.assertEqual(transactions[0]['description'], 'PAYMENT CARD  STORE XYZ')
+
 
 class TestImportStatement(unittest.TestCase):
 
@@ -147,8 +161,13 @@ class TestImportStatement(unittest.TestCase):
             default_transfer='Imbalance-USD',
         )
 
-        # FxRateCache constructed with ticker from profile
-        mock_fx_cache_cls.assert_called_once_with('EURUSD=X')
+        # FxRateCache constructed with ticker and cache_file in data/cache
+        mock_fx_cache_cls.assert_called_once()
+        call_args = mock_fx_cache_cls.call_args
+        self.assertEqual(call_args.args[0], 'EURUSD=X')
+        self.assertIn('cache_file', call_args.kwargs)
+        cache_file = call_args.kwargs['cache_file']
+        self.assertTrue(cache_file.endswith(os.path.join('data', 'cache', 'EURUSD=X_cache.csv')))
         # enter_transaction called with looked-up rate
         mock_enter.assert_called_once()
         call_kwargs = mock_enter.call_args

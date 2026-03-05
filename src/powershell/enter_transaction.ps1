@@ -55,12 +55,11 @@ Start-Sleep -Milliseconds $delay
 [System.Windows.Forms.SendKeys]::SendWait("{TAB}")
 Start-Sleep -Milliseconds $delay
 
-# Description — type it, then press Delete to reject autocomplete suggestion
-# so it won't auto-fill transfer/amount and jump the cursor
+# Description — type it with trailing 'a' to defeat autocomplete
 [System.Windows.Forms.SendKeys]::SendWait("($(Escape-SendKeys $Description))")
 Start-Sleep -Milliseconds $delay
-[System.Windows.Forms.SendKeys]::SendWait("{DELETE}")
-Start-Sleep -Milliseconds $delay
+[System.Windows.Forms.SendKeys]::SendWait("a")
+Start-Sleep -Milliseconds 500
 [System.Windows.Forms.SendKeys]::SendWait("{TAB}")
 Start-Sleep -Milliseconds $delay
 
@@ -68,6 +67,18 @@ Start-Sleep -Milliseconds $delay
 [System.Windows.Forms.SendKeys]::SendWait("^a")
 Start-Sleep -Milliseconds $delay
 [System.Windows.Forms.SendKeys]::SendWait("($(Escape-SendKeys $Transfer))")
+Start-Sleep -Milliseconds $delay
+
+# Shift-Tab back to Description, press End then Backspace to remove trailing 'a'
+[System.Windows.Forms.SendKeys]::SendWait("+{TAB}")
+Start-Sleep -Milliseconds $delay
+[System.Windows.Forms.SendKeys]::SendWait("{END}")
+Start-Sleep -Milliseconds $delay
+[System.Windows.Forms.SendKeys]::SendWait("{BACKSPACE}")
+Start-Sleep -Milliseconds $delay
+
+# Tab forward to Transfer (still has our text), then Tab to amount
+[System.Windows.Forms.SendKeys]::SendWait("{TAB}")
 Start-Sleep -Milliseconds $delay
 [System.Windows.Forms.SendKeys]::SendWait("{TAB}")
 Start-Sleep -Milliseconds $delay
