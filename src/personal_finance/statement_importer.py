@@ -56,6 +56,21 @@ def parse_statement(file_path, profile):
     return df
 
 
+def parse_amount(value):
+    """Parse a numeric string in either English (1,000.00) or European (1.000,00) format."""
+    s = str(value).strip()
+    # Find positions of last dot and last comma
+    last_dot = s.rfind('.')
+    last_comma = s.rfind(',')
+    if last_comma > last_dot:
+        # European format: dots are thousands separators, comma is decimal
+        s = s.replace('.', '').replace(',', '.')
+    else:
+        # English format or no separators: commas are thousands separators
+        s = s.replace(',', '')
+    return float(s)
+
+
 def normalize_transactions(df, profile, mapper, start_date=None):
     date_format = profile['date_format']
     transactions = []
@@ -66,7 +81,7 @@ def normalize_transactions(df, profile, mapper, start_date=None):
             continue
         gnucash_date = f'{parsed_date.month}/{parsed_date.day}/{parsed_date.strftime("%y")}'
 
-        amount = float(row['amount'])
+        amount = parse_amount(row['amount'])
         if amount >= 0:
             deposit = f'{amount:.2f}'
             withdrawal = ''
