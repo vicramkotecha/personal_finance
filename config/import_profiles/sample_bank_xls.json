@@ -3,6 +3,7 @@
     "date_format": "%d/%m/%Y",
     "header_rows_to_skip": 7,
     "fx_ticker": "EURUSD=X",
+    "category_mapping": "config/category_mappings/sample_category_mapping.json",
     "column_mappings": {
         "date": "FECHA OPERACIÓN",
         "description": "CONCEPTO",

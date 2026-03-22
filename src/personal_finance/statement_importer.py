@@ -7,7 +7,7 @@ from datetime import datetime
 
 import pandas as pd
 
-from personal_finance.category_mapper import DefaultCategoryMapper
+from personal_finance.category_mapper import DefaultCategoryMapper, RegexCategoryMapper
 from personal_finance.fx_rate_cache import FxRateCache
 from personal_finance.gnucash_interface import (
     launch_gnucash,
@@ -87,10 +87,20 @@ def normalize_transactions(df, profile, mapper):
 
 
 def import_statement(profile_path, gnucash_file, statement_file, account_name,
-                     default_transfer='Imbalance-USD'):
+                     default_transfer='Imbalance-USD', category_mapping=None):
     profile = load_profile(profile_path)
     df = parse_statement(statement_file, profile)
-    mapper = DefaultCategoryMapper(default_transfer, account_paths=[])
+
+    # Load category mapping: CLI arg > profile field > default
+    mapping_path = category_mapping or profile.get('category_mapping')
+    if mapping_path:
+        with open(mapping_path, 'r', encoding='utf-8') as f:
+            patterns = json.load(f)
+        mapper = RegexCategoryMapper(patterns, default_transfer)
+        print(f'Using regex category mapping from {mapping_path} ({len(patterns)} patterns)')
+    else:
+        mapper = DefaultCategoryMapper(default_transfer, account_paths=[])
+
     transactions = normalize_transactions(df, profile, mapper)
 
     fx_ticker = profile.get('fx_ticker')
@@ -166,6 +176,8 @@ if __name__ == '__main__':
     parser.add_argument('account', help='GnuCash account name to import into')
     parser.add_argument('--default-transfer', default='Imbalance-USD',
                         help='Default transfer account (default: Imbalance-USD)')
+    parser.add_argument('--category-mapping', default=None,
+                        help='Path to category mapping JSON (regex patterns)')
     args = parser.parse_args()
 
     import_statement(
@@ -174,4 +186,5 @@ if __name__ == '__main__':
         statement_file=args.statement_file,
         account_name=args.account,
         default_transfer=args.default_transfer,
+        category_mapping=args.category_mapping,
     )

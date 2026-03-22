@@ -78,6 +78,47 @@ def get_all_account_paths(book):
     return paths
 
 
+def get_transaction_history(book):
+    """Extract (description, account) pairs from all transactions in the book.
+
+    For each split in the book, yields the transaction description paired with
+    the *other* split's account (the transfer account). Only includes pairs
+    where the other account is an Expense or Income account (i.e. category
+    accounts, not Asset/Liability source accounts).
+    """
+    CATEGORY_TYPES = {'EXPENSE', 'INCOME'}
+    history = []
+    seen = set()
+
+    for account, _subaccounts, splits in book.walk():
+        for split in splits:
+            txn = split.transaction
+            if not txn.description:
+                continue
+
+            for other_split in txn.splits:
+                if other_split is split:
+                    continue
+                if other_split.account.actype not in CATEGORY_TYPES:
+                    continue
+                other_account = get_account_full_path_name(other_split.account)
+                if not other_account:
+                    continue
+
+                # Deduplicate by transaction guid + other account
+                key = (txn.guid, other_account)
+                if key in seen:
+                    continue
+                seen.add(key)
+
+                history.append({
+                    'description': txn.description,
+                    'account': other_account,
+                })
+
+    return history
+
+
 def get_account_path(account):
     account_path = []
     while account:

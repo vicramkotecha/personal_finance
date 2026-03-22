@@ -2,6 +2,8 @@ import os
 
 import gnucashxml
 
+from dotenv import load_dotenv
+
 from personal_finance.balance_history_report import BalanceHistoryReport
 from personal_finance.pie_chart_report import PieChartReport
 from personal_finance.report_generator import ReportGenerator
@@ -52,10 +54,10 @@ def run_combined_report(gnucash_xml_file, report_path, modelo720csvpath, fbarcsv
     run_report(gnucash_xml_file, generators, report_path)
 
 if __name__ == '__main__':
-    home_dir = os.path.expanduser('~')
-    gnucash_xml_file = os.path.join(home_dir, 'gnucash', 'accounts.gnucash')
-    report_path = os.path.join(home_dir, 'gnucash', 'reports', 'combined_report.pdf')
-    modelo720csvpath = os.path.join(home_dir, 'gnucash', 'reports', 'modelo720.csv')
-    fbarcsvpath = os.path.join(home_dir, 'gnucash', 'reports', 'fbar.csv')
+    base_dir = os.environ.get('PERSONAL_FINANCE_BASE_DIR', os.path.expanduser('~'))
+    gnucash_xml_file = os.path.join(base_dir, 'accounts.gnucash')
+    report_path = os.path.join(base_dir, 'reports', 'combined_report.pdf')
+    modelo720csvpath = os.path.join(base_dir, 'reports', 'modelo720.csv')
+    fbarcsvpath = os.path.join(base_dir, 'reports', 'fbar.csv')
     run_combined_report(gnucash_xml_file, report_path, modelo720csvpath, fbarcsvpath)
     print('Report generated at: {}'.format(report_path))
