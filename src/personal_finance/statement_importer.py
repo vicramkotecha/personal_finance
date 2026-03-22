@@ -56,12 +56,14 @@ def parse_statement(file_path, profile):
     return df
 
 
-def normalize_transactions(df, profile, mapper):
+def normalize_transactions(df, profile, mapper, start_date=None):
     date_format = profile['date_format']
     transactions = []
 
     for _, row in df.iterrows():
         parsed_date = datetime.strptime(str(row['date']), date_format)
+        if start_date and parsed_date.date() < start_date:
+            continue
         gnucash_date = f'{parsed_date.month}/{parsed_date.day}/{parsed_date.strftime("%y")}'
 
         amount = float(row['amount'])
@@ -87,7 +89,8 @@ def normalize_transactions(df, profile, mapper):
 
 
 def import_statement(profile_path, gnucash_file, statement_file, account_name,
-                     default_transfer='Imbalance-USD', category_mapping=None):
+                     default_transfer='Imbalance-USD', category_mapping=None,
+                     start_date=None):
     profile = load_profile(profile_path)
     df = parse_statement(statement_file, profile)
 
@@ -101,7 +104,7 @@ def import_statement(profile_path, gnucash_file, statement_file, account_name,
     else:
         mapper = DefaultCategoryMapper(default_transfer, account_paths=[])
 
-    transactions = normalize_transactions(df, profile, mapper)
+    transactions = normalize_transactions(df, profile, mapper, start_date=start_date)
 
     fx_ticker = profile.get('fx_ticker')
     if fx_ticker:
@@ -178,7 +181,11 @@ if __name__ == '__main__':
                         help='Default transfer account (default: Imbalance-USD)')
     parser.add_argument('--category-mapping', default=None,
                         help='Path to category mapping JSON (regex patterns)')
+    parser.add_argument('--start-date', default=None,
+                        help='Ignore transactions before this date (YYYY-MM-DD, inclusive)')
     args = parser.parse_args()
+
+    start_date = datetime.strptime(args.start_date, '%Y-%m-%d').date() if args.start_date else None
 
     import_statement(
         profile_path=args.profile,
@@ -187,4 +194,5 @@ if __name__ == '__main__':
         account_name=args.account,
         default_transfer=args.default_transfer,
         category_mapping=args.category_mapping,
+        start_date=start_date,
     )

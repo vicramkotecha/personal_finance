@@ -1,5 +1,6 @@
 import os
 import unittest
+from datetime import date
 from unittest.mock import patch, MagicMock
 
 from personal_finance.category_mapper import DefaultCategoryMapper
@@ -94,6 +95,20 @@ class TestNormalizeTransactions(unittest.TestCase):
         )
         transactions = normalize_transactions(df, self.profile, mapper)
         self.assertEqual(transactions[0]['description'], 'PAYMENT CARD  STORE XYZ')
+
+    def test_normalize_filters_transactions_before_start_date(self):
+        import pandas as pd
+        df = pd.DataFrame([
+            {'date': '2024-01-01', 'description': 'Old txn', 'amount': 100.00},
+            {'date': '2024-06-15', 'description': 'New txn', 'amount': 200.00},
+        ])
+        mapper = DefaultCategoryMapper(
+            default_transfer_account='Imbalance-USD',
+            account_paths=[],
+        )
+        transactions = normalize_transactions(df, self.profile, mapper, start_date=date(2024, 6, 15))
+        self.assertEqual(len(transactions), 1)
+        self.assertEqual(transactions[0]['description'], 'New txn')
 
 
 class TestImportStatement(unittest.TestCase):
