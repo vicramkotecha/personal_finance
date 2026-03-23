@@ -33,6 +33,8 @@ def parse_statement(file_path, profile):
             skiprows=header_rows_to_skip,
             delimiter=profile.get('delimiter', ','),
             encoding=profile.get('encoding', 'utf-8'),
+            quotechar=profile.get('quotechar', '"'),
+            index_col=False,
         )
     elif file_format in ('xls', 'xlsx'):
         df = pd.read_excel(

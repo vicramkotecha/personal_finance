@@ -62,6 +62,40 @@ class TestFxRateCache(unittest.TestCase):
             self.assertIn('1.0834', contents)
 
     @patch('personal_finance.fx_rate_cache.yf')
+    def test_retries_previous_days_when_no_data_on_requested_date(self, mock_yf):
+        empty_history = MagicMock(empty=True)
+        good_history = MagicMock(
+            empty=False,
+            __getitem__=lambda self, key: MagicMock(iloc=MagicMock(__getitem__=lambda self, i: 1.2650)),
+        )
+        mock_ticker = MagicMock()
+        # First two calls (day 0 and day-1) return empty, third (day-2) succeeds
+        mock_ticker.history.side_effect = [empty_history, empty_history, good_history]
+        mock_yf.Ticker.return_value = mock_ticker
+
+        cache = FxRateCache('GBPUSD=X')
+        rate = cache.get_rate('2026-03-15')  # a Sunday
+
+        self.assertEqual(rate, '1.2650')
+        self.assertEqual(mock_ticker.history.call_count, 3)
+        # The rate should be cached under the originally requested date
+        self.assertEqual(cache._cache['2026-03-15'], '1.2650')
+
+    @patch('personal_finance.fx_rate_cache.yf')
+    def test_raises_after_exhausting_lookback(self, mock_yf):
+        empty_history = MagicMock(empty=True)
+        mock_ticker = MagicMock()
+        mock_ticker.history.return_value = empty_history
+        mock_yf.Ticker.return_value = mock_ticker
+
+        cache = FxRateCache('GBPUSD=X')
+        with self.assertRaises(ValueError):
+            cache.get_rate('2026-03-15')
+
+        # Should have tried 5 times (day 0 through day-4)
+        self.assertEqual(mock_ticker.history.call_count, 5)
+
+    @patch('personal_finance.fx_rate_cache.yf')
     def test_load_reads_cache_from_csv_and_skips_api(self, mock_yf):
         mock_ticker = MagicMock()
         mock_yf.Ticker.return_value = mock_ticker

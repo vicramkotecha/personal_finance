@@ -24,19 +24,19 @@ class FxRateCache:
             return self._cache[date_str]
 
         dt = datetime.strptime(date_str, '%Y-%m-%d')
-        start = dt
-        end = dt + timedelta(days=1)
 
-        history = self.ticker.history(start=start.strftime('%Y-%m-%d'),
-                                      end=end.strftime('%Y-%m-%d'))
+        for lookback in range(5):
+            start = dt - timedelta(days=lookback)
+            end = start + timedelta(days=1)
+            history = self.ticker.history(start=start.strftime('%Y-%m-%d'),
+                                          end=end.strftime('%Y-%m-%d'))
+            if not history.empty:
+                rate = history['Close'].iloc[0]
+                rate_str = f'{rate:.4f}'
+                self._cache[date_str] = rate_str
+                return rate_str
 
-        if history.empty:
-            raise ValueError(f'No FX rate found for {self.ticker_symbol} on {date_str}')
-
-        rate = history['Close'].iloc[0]
-        rate_str = f'{rate:.4f}'
-        self._cache[date_str] = rate_str
-        return rate_str
+        raise ValueError(f'No FX rate found for {self.ticker_symbol} on {date_str} (tried 4 days back)')
 
     def save(self):
         if not self._cache_file:
